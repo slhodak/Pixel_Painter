@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<link href="https://fonts.googleapis.com/css?family=Roboto+Mono" rel="stylesheet">
+
+
+		<style>
+			html {
+				height: 100%;
+				font-family: "Roboto Mono", monospace;
+			}
+
+			body {
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				margin: 0px;
+				height: 100%;
+				background-repeat: no-repeat;
+				background-image: linear-gradient(45deg, #68d, #afd);
+			}
+
+			h3 {
+				display: inline;
+			}
+
+			p {
+				margin: 0px;
+			}
+
+			#title {
+				text-align: center;
+				text-decoration: underline;
+			}
+
+			#map {
+				display: grid;
+				grid-template-columns: repeat(auto-fit, 50px);
+				background: #444;
+				grid-gap: 1px;
+				height: 509px;
+				width: 509px;
+			}
+
+			.box {
+				background: #adf;
+			}
+
+			#instructions {
+				text-align: center;
+				width: 500px;
+			}
+
+			#picker {
+				padding: 10px;
+			}
+
+			footer {
+				height: 50px;
+				padding: 10px;
+			}
+
+			#watermark {
+				font-size: 0.8em;
+				padding: 1px;
+				border: 1px solid;
+			}
+
+		</style>
+	</head>
+	<body>
+		<h1 id="title">Pixel Drawing</h1>
+
+		<p id="instructions">
+			<ol>
+				<li>Select colors
+				<li>Paint tiles
+				<li>Press the spacebar to start over
+			</ol>
+		</p>
+		
+		<article id="picker">
+			<h3>Color: </h3>
+			<input type="color" value="#ff9ecc">
+		</article>
+		
+		<div id="map">
+		</div>
+		<footer><span id="watermark">Created by Sam Hodak</span></footer>
+
+	
+		<script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+		<script type="text/javascript">
+			window.addEventListener("keydown", keyDown);
+			const map = document.getElementById("map");
+			const colorPicker = document.querySelector("input");
+			colorPicker.addEventListener("change", watchColorPicker, false);
+			let currentColor = colorPicker.value;
+
+			function watchColorPicker(event) {
+				currentColor = event.target.value;
+			}
+
+			const NUMBER_OF_BOXES = 100;
+			let i = 0;
+
+			while (i < NUMBER_OF_BOXES) {
+				var newDiv = document.createElement("div");
+				newDiv.setAttribute("class", "box");
+				newDiv.setAttribute("id", String("box" + i));
+				map.appendChild(newDiv);
+				i++;
+				console.log(i);
+				console.log(newDiv.id);
+			}
+
+			const boxes = document.querySelectorAll(".box");
+
+
+			$(".box").mousedown(
+    			function(event) {
+					this.style.background = currentColor;
+	 			}
+ 			)
+
+			function keyDown(event) {
+				console.log(event.key);
+				switch (event.key) {
+					case " ":
+						for (let i = 0; i < boxes.length; i++) {
+							boxes[i].style.background = "#adf";
+						}
+						break;
+					default:
+						break;
+				}
+			}
+
+
+		</script>
+	</body>
+</html>
