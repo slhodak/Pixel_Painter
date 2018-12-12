@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<link href="https://fonts.googleapis.com/css?family=Roboto+Mono" rel="stylesheet">
+
+		<style>
+			html {
+				font-family: "Roboto Mono", monospace;
+			}
+
+			body {
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				margin: 0px;
+				height: 100%;
+				background-repeat: no-repeat;
+				background-image: linear-gradient(45deg, #68d, #afd);
+				border: 3px solid;
+				box-shadow: inset 0px 0px 6px 0px;
+			}
+
+			h3 {
+				display: inline;
+			}
+
+			p {
+				margin: 0px;
+			}
+
+			#title {
+
+				text-align: center;
+				text-decoration: underline;
+				text-shadow: 1px 1px 1px #777;
+			}
+
+			.grid-container {
+				display: grid;
+				/*grid-template-columns: repeat(auto-fit, 50px);*/
+				grid-gap: 1px;
+				/*width: 509px;
+				height: 509px;*/
+				background: #555;
+			}
+			.grid-item {
+				background: #000;
+			}
+
+			#instructions {
+				text-align: center;
+				width: 500px;
+			}
+
+			#picker {
+				padding: 10px;
+			}
+
+			footer {
+				height: 50px;
+				padding: 10px;
+			}
+
+			#watermark {
+				font-size: 0.8em;
+				padding: 1px;
+				border: 1px solid;
+				border-radius: 3px;
+				box-shadow: 1px 1px 2px 0px #555;
+			}
+
+			#results {
+				display: flex;
+				justify-content: space-around;
+				margin: 10px;
+			}
+
+		</style>
+	</head>
+	<body>
+		<h1 id="title">Pixel Drawing</h1>
+
+		<p id="instructions">
+			<ol>
+				<li>Adjust resolution
+				<li>Select colors
+				<li>Paint tiles
+				<li>Press the spacebar to start over
+				<li>Press "p" to generate PNG below
+			</ol>
+		</p>
+		
+		<article id="picker">
+			<h3>Color: </h3>
+			<input type="color" value="#ff9ecc" id="colPicker">
+		</article>
+		<label for="resolutionSlider">Resolution: </label>
+		<input type="range" min="10" max="50" step="10" id="resolutionSlider" oninput="createGrid(value)">
+
+		<article id="parent-to-grid">
+		</article>
+
+		<div id="results"></div>
+
+		<footer><span id="watermark">Created by Sam Hodak</span></footer>
+
+		<script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+
+		<script type="text/javascript">
+
+			window.addEventListener("keydown", keyDown);
+			const colorPicker = document.getElementById('colPicker');
+			colorPicker.addEventListener("change", watchColorPicker, false);
+			let currentColor = colorPicker.value;
+
+			let drawing = false;
+
+			let gridParent = document.querySelector('#parent-to-grid');
+			let squares = [];
+
+			let containerHeightInItems = 0;
+			let containerHeightInPixels = 0;
+			let squaresWanted = 0;
+			let container = document.createElement('div');
+			container.setAttribute('class', 'grid-container');
+			gridParent.appendChild(container);
+
+			function watchColorPicker(event) {
+				currentColor = event.target.value;
+			}
+
+			function createGrid(itemSideLength) {
+				// Container height == container width; item height == item width.
+				
+				containerHeightInItems = Math.floor(500/itemSideLength);
+				containerHeightInPixels = containerHeightInItems * itemSideLength + (containerHeightInItems - 1);
+				squaresWanted = Math.pow(containerHeightInItems, 2);
+					container.style.width = containerHeightInPixels + "px";
+				container.style.height = containerHeightInPixels + "px";
+				container.style.gridTemplateColumns = "repeat(auto-fit, " + itemSideLength + "px)";
+
+				while(squares.length < squaresWanted) {
+					let square = document.createElement('div');
+					square.setAttribute('class', 'grid-item');
+					square.setAttribute('id', String(squares.length));
+					squares.push(square);
+					container.appendChild(square);
+					}
+
+				while(squares.length > squaresWanted) {
+					let poppedSquare = squares.pop();
+					container.removeChild(poppedSquare);
+				}
+
+/*
+				boxes = Array.prototype.slice.call(document.querySelectorAll('.grid-item'));
+
+				if(itemCount > numberOfItems) {
+					let excess = boxes.map(box => Number(box.id > numberOfItems));
+					excess.map(item => console.log(item));
+					itemCount -= boxes.length;
+					console.log(itemCount);
+				}
+*/
+			}
+
+			createGrid(30);
+
+	
+			$('#parent-to-grid').on('mousedown', '.grid-item',
+				function() { drawing = true;
+					this.style.background = currentColor; 
+				}
+			)
+
+			$('#parent-to-grid').on('mouseenter', '.grid-item',
+				function() {
+					if (drawing == true) { this.style.background = currentColor; }
+				}
+			)
+
+			$("html").mouseup(
+				function() { drawing = false; }
+			)
+
+			/*$("html").mousedown( function() {console.log("mouse pressed"); console.log(document.querySelector('.grid-item')); }
+			)*/
+
+			let imgCount = 0;
+
+			function keyDown(event) {
+				console.log(event.key);
+				switch (event.key) {
+					case " ":
+						for (let i = 0; i < boxes.length; i++) {
+							boxes[i].style.background = "#adf";
+						}
+						break;
+					case "p":
+						const colorStrings = Object.values(squares).map(square => square.style.background);
+						const colors = colorStrings.map(colorString => getColor(colorString));
+						const colorArrays = colors.map(color => stripRGBSpaces(color).split(','));						
+						// This is turning a multidimensional array into a list of numbers
+						//const colorNumArrays = colorArrays.map(array => array.map(str => Number(str)));
+						let img = createImage(colorArrays, containerHeightInItems, containerHeightInItems);
+						let div = document.createElement('div');
+						div.setAttribute('id', 'img' + imgCount);
+						div.style.border = "1px solid";
+						div.style.margin = "5px";
+						imgCount++;
+						div.appendChild(img);
+						document.getElementById('results').appendChild(div);
+					default:
+						break;
+				}
+			}
+
+			function createImage (array, width, height) {
+				canvas = document.createElement('canvas');
+				context = canvas.getContext('2d');
+				imgData = context.createImageData(width, height);
+				
+				canvas.width = width;
+				canvas.height = height;
+
+				for (let i = 0; i < array.length; i++) {
+					imgData.data[i * 4] = Number(array[i][0]);
+					imgData.data[(i * 4) + 1] = Number(array[i][1]);
+					imgData.data[(i * 4) + 2] = Number(array[i][2]);
+					imgData.data[(i * 4) + 3] = 255;
+				}
+
+
+				context.putImageData(imgData, 0, 0);
+
+				let img = new Image();
+				img.src = canvas.toDataURL('image/png');
+
+				return img;
+			}
+
+			// Step 1 : Strip characters around color value of string
+			// Returns "0, 0, 0"
+			function getColor(colorString) {
+				return colorString.slice(colorString.indexOf("(") + 1, colorString.indexOf(")"));
+			}
+
+			// Returns "0,0,0"
+			function stripRGBSpaces(rgb) {
+				//will receive "0, 0, 0"
+				rgb = rgb.replace(', ', ',');
+				return rgb.replace(', ', ',');
+			}
+
+			// Step 2 : Split strings into mini-arrays
+			//const rgbArrays = rgbArray.map(rgb => rgb_string_to_array(rgb).split(','));
+
+			// Step 3 : Change mini-array values to numbers from strings
+			//const rgbNumArrays = rgbArrays.map(arr => arr.map(str => Number(str)));
+
+
+
+		</script>
+	</body>
+</html>
